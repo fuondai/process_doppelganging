@@ -1,0 +1,4 @@
+C:/Users/dadad/Downloads/process_doppelganging-0.4/process_doppelganging-0.4/build/CMakeFiles/process_doppelganging.dir
+C:/Users/dadad/Downloads/process_doppelganging-0.4/process_doppelganging-0.4/build/CMakeFiles/INSTALL.dir
+C:/Users/dadad/Downloads/process_doppelganging-0.4/process_doppelganging-0.4/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/dadad/Downloads/process_doppelganging-0.4/process_doppelganging-0.4/build/CMakeFiles/ZERO_CHECK.dir
