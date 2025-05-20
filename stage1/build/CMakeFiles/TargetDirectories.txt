@@ -1,0 +1,4 @@
+C:/Users/dadad/Downloads/stage1/build/CMakeFiles/MinLoader.dir
+C:/Users/dadad/Downloads/stage1/build/CMakeFiles/Obfuscator.dir
+C:/Users/dadad/Downloads/stage1/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/dadad/Downloads/stage1/build/CMakeFiles/ZERO_CHECK.dir

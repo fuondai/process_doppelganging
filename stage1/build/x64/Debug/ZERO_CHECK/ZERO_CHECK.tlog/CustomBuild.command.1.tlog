@@ -1,0 +1,10 @@
+^C:\USERS\DADAD\DOWNLOADS\STAGE1\BUILD\CMAKEFILES\50E9AA6EB484CF5FB6A1133F89F6D1E0\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/dadad/Downloads/stage1 -BC:/Users/dadad/Downloads/stage1/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/dadad/Downloads/stage1/build/DoppelgangTools.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
