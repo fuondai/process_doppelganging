@@ -1,10 +1,10 @@
 # Process Doppelgänging: Song trùng tiến trình
 
-<div align="center">
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![Platform](https://img.shields.io/badge/Platform-Windows-brightgreen.svg)](https://www.microsoft.com/windows)
-  [![Build Status](https://img.shields.io/badge/Build-Passing-success.svg)](https://github.com/fu0nd41/process_doppelganging)
-</div>
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://www.microsoft.com/windows"><img src="https://img.shields.io/badge/Platform-Windows-brightgreen.svg" alt="Platform"></a>
+  <a href="https://github.com/fu0nd41/process_doppelganging"><img src="https://img.shields.io/badge/Build-Passing-success.svg" alt="Build Status"></a>
+</p>
 
 ## Tổng Quan
 
