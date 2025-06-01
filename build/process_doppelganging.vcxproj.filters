@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\file_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\win_api_ext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\binary_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\proc_context.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\file_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\win_api_ext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\win_structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\win_kernel_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\binary_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\proc_context.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\dadad\Downloads\process_doppelganging-0.4\process_doppelganging-0.4\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{6E569263-BB6E-3DA3-A114-2F496805334A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{B68267CC-A9CF-34F9-9158-1A153CDCE93D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
