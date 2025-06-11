@@ -1,0 +1,38 @@
+RESEARCH AND EDUCATIONAL PURPOSES ONLY LICENSE
+
+Copyright (c) 2025 fu0nd4i
+
+This software and associated documentation files (the "Software") are provided solely for research, educational, and academic purposes in the field of cybersecurity, malware analysis, and threat intelligence. The Software demonstrates the Process Doppelgänging technique, which can be used maliciously if misapplied.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this Software, to use the Software under the following strict conditions:
+
+1. The Software may ONLY be used for:
+   a. Academic research
+   b. Educational purposes
+   c. Defensive security research
+   d. Authorized penetration testing with explicit written consent
+
+2. The Software may NOT be used for:
+   a. Any illegal activities
+   b. Unauthorized penetration testing
+   c. Development of malicious software
+   d. Targeting systems without explicit written authorization
+   e. Any activity that may cause harm or damage
+
+3. Redistributions of source code must:
+   a. Retain this entire license notice
+   b. Include proper attribution to original authors
+   c. Clearly indicate any modifications made
+   d. Not imply endorsement by original authors for modifications
+
+4. Users must:
+   a. Acknowledge the potential for misuse
+   b. Take appropriate security precautions
+   c. Comply with all applicable laws and regulations
+   d. Accept full responsibility for any consequences
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+THE AUTHORS EXPLICITLY DISCLAIM ANY RESPONSIBILITY FOR MISUSE OF THIS SOFTWARE.
+
+By downloading, installing, copying, or otherwise using this Software, you agree to be bound by the terms of this license.
